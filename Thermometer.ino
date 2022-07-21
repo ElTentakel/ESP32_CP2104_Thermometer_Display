@@ -105,8 +105,21 @@ void loop()
         tft.setTextColor(TFT_WHITE, TFT_BLACK);
       }
     }
+
+    int i = 0;
+    for (i=0; i<30; i++)
+    {
+      delay(1000);
+      if (i%2)
+      {
+          tft.drawSpot(220,120,3,TFT_BLACK,TFT_ORANGE);
+      }
+      else
+      {
+         tft.drawSpot(220,120,3,TFT_ORANGE,TFT_BLACK);
+      }
       
-    delay(30000);  
+    }
     if (http.connected()) http.end();
   }
 }
