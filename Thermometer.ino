@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <HTTPClient.h>
+#include <ArduinoJson.h>
 
 WiFiMulti wifiMulti;
 char payload_chars[256];
@@ -44,36 +45,65 @@ void loop()
       char tc[6];
       char pc[6];
       char hc[8];
+      StaticJsonDocument<256> doc;
 
       // payload = http.getString();
       http.getString().toCharArray(payload_chars, 256);
       Serial.println(payload_chars);
 
-      pch = strstr (payload_chars,"Temperature");
-      strncpy (tc,pch + 13,5);
-      if (tc[4] == ',')
-        tc[4] = 0;
+      DeserializationError error = deserializeJson(doc, payload_chars);
 
-      pch = strstr (payload_chars,"Humidity");
-      strncpy (hc,pch + 10,4);
-      
-      pch = strstr (payload_chars,"Pressure");
-      strncpy (pc,pch + 10,6);
-      if (pc[5] == '}')
-        pc[5] = 0;
+      if (!error)
+      {
+        //{"StatusSNS":{"Time":"2022-07-20T20:19:54","BME280":{"Temperature":31.9,"Humidity":35.7,"DewPoint":14.8,"Pressure":1002.9},"PressureUnit":"hPa","TempUnit":"C"}}
 
-      tft.setTextSize(3);
-      tft.setCursor(0, 0, 4);
-      tft.fillScreen(TFT_BLACK);
+        double Temperature = doc["StatusSNS"]["BME280"]["Temperature"];
+        double Humidity = doc["StatusSNS"]["BME280"]["Humidity"];
+        double Pressure = doc["StatusSNS"]["BME280"]["Pressure"];
 
-      tft.println(String(tc) + " °C");
-      tft.setTextSize(1);
-      tft.setTextColor(TFT_ORANGE, TFT_BLACK);
-      tft.println(String(hc) + " %");
-      tft.println(String(pc) + " hPa");
-      tft.drawFastHLine(0,72,TFT_HEIGHT,TFT_ORANGE);
-      tft.drawFastHLine(0,73,TFT_HEIGHT,TFT_ORANGE);
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.setTextSize(3);;
+        tft.setCursor(0, 0, 4);
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+        tft.println(String(Temperature,1) + " °C");
+        tft.setTextSize(1);
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+        tft.print(String(Humidity,1) + " %  ");
+        tft.println(String(Pressure,1) + " hPa");
+        tft.drawFastHLine(0,70,TFT_HEIGHT,TFT_ORANGE);
+        tft.drawFastHLine(0,71,TFT_HEIGHT,TFT_ORANGE);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      }
+      else
+      {
+        pch = strstr (payload_chars,"Temperature");
+        strncpy (tc,pch + 13,5);
+        if (tc[4] == ',')
+          tc[4] = 0;
+
+        pch = strstr (payload_chars,"Humidity");
+        strncpy (hc,pch + 10,4);
+
+        pch = strstr (payload_chars,"Pressure");
+        strncpy (pc,pch + 10,6);
+        if (pc[5] == '}')
+          pc[5] = 0;
+
+        tft.setTextSize(3);
+        tft.setCursor(0, 0, 4);
+        tft.fillScreen(TFT_BLACK);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+
+        tft.println(String(tc) + " °C");
+        tft.setTextSize(1);
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+        tft.println(String(hc) + " %");
+        tft.println(String(pc) + " hPa");
+        tft.drawFastHLine(0,72,TFT_HEIGHT,TFT_ORANGE);
+        tft.drawFastHLine(0,73,TFT_HEIGHT,TFT_ORANGE);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      }
     }
       
     delay(30000);  
