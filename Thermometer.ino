@@ -9,6 +9,9 @@ char payload_chars[256];
 TFT_eSPI tft = TFT_eSPI();  // Invoke custom library
 
 void setup(void) {
+  Serial.begin(115200);
+  Serial.println("Init");
+
   tft.init();
 
   tft.setTextSize(1);
@@ -27,6 +30,7 @@ void loop()
   // wait for WiFi connection
   if((wifiMulti.run() == WL_CONNECTED))
   {
+    Serial.println("connected");
     HTTPClient http;
     int httpCode;
     http.begin("http://192.168.1.123/cm?cmnd=cmd/tasmota_00000/stat/STATUS%208");
@@ -35,6 +39,7 @@ void loop()
     httpCode = http.GET();
     if(httpCode == HTTP_CODE_OK)
     {
+      Serial.println("http get ok");
       char * pch;        
       char tc[6];
       char pc[6];
@@ -42,6 +47,7 @@ void loop()
 
       // payload = http.getString();
       http.getString().toCharArray(payload_chars, 256);
+      Serial.println(payload_chars);
 
       pch = strstr (payload_chars,"Temperature");
       strncpy (tc,pch + 13,5);
